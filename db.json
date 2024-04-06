@@ -1,0 +1,16 @@
+{
+    "userName": "Hassan",
+    "password": "Hassan@123",
+    "data": [{
+    "id": 1,
+    "name": "DAWG",
+    "chain": "ETH",
+    "api": "Select",
+    "contact": "1Lbcfr7sAHTD9CgdQo3HTMTkV8LK4ZnX71.",
+    "mcap": "50000",
+    "price": "0.4112",
+    "bag": "1231118",
+    "free": "true",
+    "targets": "12/13"
+}]
+}
