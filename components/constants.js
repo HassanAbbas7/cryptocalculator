@@ -1,6 +1,6 @@
 import axios from "axios"
 
-const BASE_URL = "http://hassanabbasnaqvi.pythonanywhere.com/api/"
+const BASE_URL = "https://hassanabbasnaqvi.pythonanywhere.com/api/"
 
 const COINMARKET_API = BASE_URL + "coinmarket"
 const DEXSCREENER_API = "https://api.dexscreener.com/latest/dex/tokens/"
