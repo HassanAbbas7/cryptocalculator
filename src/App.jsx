@@ -21,7 +21,8 @@ function App() {
 
   return (
     <>
-    {loggedin ? <Index username={username} password={password} /> : <form>
+    <Index username="hassan" password="123" />
+    {/* {loggedin ? <Index username={username} password={password} /> : <form>
   <div className="form-group my-3">
     <label htmlFor="exampleInputEmail1">Username</label>
     <input type="text" className="form-control" value={username} onChange={(e)=>{setUsername(e.target.value)}} id="exampleInputEmail1" aria-describedby="usernameHelp" placeholder="Enter username" />
@@ -33,7 +34,7 @@ function App() {
   </div>
   <button type="submit" className="btn btn-primary" onClick={handleSubmit}>Submit</button>
 </form>
-}
+} */}
     </>
   )
 }

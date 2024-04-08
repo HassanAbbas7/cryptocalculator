@@ -9,26 +9,27 @@ import Modal from 'react-bootstrap/Modal';
 import { ModalTitle } from 'react-bootstrap';
 import { CoinMarketRequest, DexScreenerRequest } from '../components/constants';
 
-const Index = ({username, password}) => {
+const Index = ({ username, password }) => {
 
-  const [headers, setHeaders] = useState(["#", "PNN", "dexId", "PAD" ,"L.Type", "Chain", "API", "Contact addr", "E.Mcap", "E.Price", "B.Size", "free?", "G.fee", "Targets", "Socials", "Notes", "Dates", "apiPrice", "volume", "fullyDilutedMarketCap", "totalSupply", "liquidity", "circulatingSupply"])
-  const [fullHeaders, setFullHeaders] = useState(["id", "Project Nick Name", "[API] dexId", "[API] pairAddressDex", "List Type", "Chain","API Source" ,"Contact Address", "Entry MCAP", "Entry Price", "Bag Size", "is it Free?", "Gas Fee", "Targets (separated by /)", "Socials", "Notes", "Important Dates", "[API] apiPrice", "[API] volume", "[API] fullyDilutedMarketCap", "[API] totalSupply", "[API] liquidity", "[API] circulatingSupply"])
+  const [headers, setHeaders] = useState(["#", "PNN", "dexId", "PAD", "L.Type", "Chain", "API", "Contact addr", "E.Mcap", "E.Price", "B.Size", "free?", "G.fee", "Targets", "Socials", "Notes", "Dates", "apiPrice", "volume", "fullyDilutedMarketCap", "totalSupply", "liquidity", "circulatingSupply"])
+  const [fullHeaders, setFullHeaders] = useState(["id", "Project Nick Name", "[API] dexId", "[API] pairAddressDex", "List Type", "Chain", "API Source", "Contact Address", "Entry MCAP", "Entry Price", "Bag Size", "is it Free?", "Gas Fee", "Targets (separated by /)", "Socials", "Notes", "Important Dates", "[API] apiPrice", "[API] volume", "[API] fullyDilutedMarketCap", "[API] totalSupply", "[API] liquidity", "[API] circulatingSupply"])
 
   const [apiOptions, setApiOptions] = useState(["CMC", "DS"])
   const [listType, setListType] = useState(["Active Trades", "Watch List", "Archived", "MoonBags list"])
   const [edit, setEdit] = useState({ rowId: null, column: null });
   const [data, setData] = useState();
   const latestData = useRef(data);
-  const [targets, setTargets] = useState([{"target1": "", "target2": "", "target3": ""}]);
+  const [targets, setTargets] = useState([{ "target1": "", "target2": "", "target3": "" }]);
   const [socialCache, setSocialCache] = useState();
   const [notesCache, setNotesCache] = useState();
   const [datesCache, setDatesCache] = useState();
   const [datesDate, setDatesDate] = useState();
   const [show, setShow] = useState(false);
-  const handleClose = () => setShow(false);
+  const [show2, setShow2] = useState(false);
+  const handleClose = () => {setShow(false); setShow2(false)};
   const [modalTarget, setModalTarget] = useState({});
   const [modalInputFocus, setModalInputFocus] = useState(false);
-  const [interval_ , setInterval_] = useState();
+  const [interval_, setInterval_] = useState();
   const [handleingApis, setHandleingApis] = useState(false);
 
 
@@ -48,7 +49,7 @@ const Index = ({username, password}) => {
 
   useEffect(() => {
     latestData.current = data;
-    if (data){
+    if (data) {
       updateData(username, password, data)
     }
   }, [data])
@@ -60,12 +61,12 @@ const Index = ({username, password}) => {
       if (row.symbolId && row.symbolId != "wrong address" && row.api == "CMC") {
         return [row.id, row.contact]
       }
-    }).map((row)=>[row.id, row.symbolId])
+    }).map((row) => [row.id, row.symbolId])
     console.log(selectedRows)
     if (selectedRows.length == 0) return
 
 
-    let onlySymbols = selectedRows.map((value)=>value[1])
+    let onlySymbols = selectedRows.map((value) => value[1])
     onlySymbols = [... new Set(onlySymbols)].join()
     let data_ = await CoinMarketRequest(null, onlySymbols);
     let newData = latestData.current.map((row) => {
@@ -74,13 +75,13 @@ const Index = ({username, password}) => {
       }
 
       if (onlySymbols.split(",").includes(row.symbolId.toString())) {
-        let rowAPIReturn = data_.filter((rowAPI)=>Object.keys(rowAPI).includes(row.symbolId.toString()))[0][row.symbolId.toString()]
+        let rowAPIReturn = data_.filter((rowAPI) => Object.keys(rowAPI).includes(row.symbolId.toString()))[0][row.symbolId.toString()]
         console.log(rowAPIReturn)
         return { ...row, ["apiPrice"]: rowAPIReturn.price, ["volume"]: rowAPIReturn.volume, ["fullyDilutedMarketCap"]: rowAPIReturn.fullyDilutedMarketCap, ["totalSupply"]: rowAPIReturn.totalSupply, ["circulatingSupply"]: rowAPIReturn.circulatingSupply };
       }
 
       return row
-      
+
     })
     console.log(newData)
     setData(newData);
@@ -113,36 +114,35 @@ const Index = ({username, password}) => {
 
     return updatedData;
   };
-  
 
 
-  const handleUpdate = (id, column, newValue, isMoney=false, allowSpecialChar=false) => {
-  const updatedRows = data.map((row) => {
-    if (row.id === id) {
-      // Remove special characters, if needed
-      if (!allowSpecialChar) {
-        newValue = newValue.replace(/[^a-zA-Z0-9\s.]/g, '');
+
+  const handleUpdate = (id, column, newValue, isMoney = false, allowSpecialChar = false) => {
+    const updatedRows = data.map((row) => {
+      if (row.id === id) {
+        // Remove special characters, if needed
+        if (!allowSpecialChar) {
+          newValue = newValue.replace(/[^a-zA-Z0-9\s.]/g, '');
+        }
+
+        // Format as money: first ensure only numbers (and period for decimals) remain, then add commas
+        if (isMoney) {
+          // This regex ensures we keep digits and the period if not preceded by non-digits
+          let numbers = newValue.replace(/(?!^\d+)\D/g, '');
+          newValue = parseFloat(numbers).toLocaleString('en-US', { maximumFractionDigits: 2 });
+        }
+
+        return { ...row, [column]: newValue };
       }
+      return row;
+    });
 
-      // Format as money: first ensure only numbers (and period for decimals) remain, then add commas
-      if (isMoney) {
-        // This regex ensures we keep digits and the period if not preceded by non-digits
-        let numbers = newValue.replace(/(?!^\d+)\D/g, '');
-        newValue = parseFloat(numbers).toLocaleString('en-US', { maximumFractionDigits: 2 });
-      }
-
-      return { ...row, [column]: newValue };
-    }
-    return row;
-  });
-
-  setData(updatedRows);
-  updateTargets_(updatedRows);
-}
+    setData(updatedRows);
+    updateTargets_(updatedRows);
+  }
 
 
-const updateTargets_ = (data) =>
-{
+  const updateTargets_ = (data) => {
     if (data) {
       const updatedRows = data.map((row) => {
         return { ...row, ["target1"]: row.targets.split('/')[0], ["target2"]: row.targets.split('/')[1], ["target3"]: row.targets.split('/')[2] };
@@ -151,12 +151,12 @@ const updateTargets_ = (data) =>
     }
   }
 
-  
-  
 
 
 
-  const formatNumber = (num)=> {
+
+
+  const formatNumber = (num) => {
     if (!num) return 0
     num = num.toString().replaceAll(',', '')
     num = Number(num);
@@ -170,7 +170,7 @@ const updateTargets_ = (data) =>
     }
   }
 
-  const formatPrice = (str)=> {
+  const formatPrice = (str) => {
     const numberAfterZeroes = str.substring(str.search(/[1-9]/));
     const zeroesCount = str.substring(str.indexOf('.') + 1, str.search(/[1-9]/)).length;
 
@@ -186,13 +186,13 @@ const updateTargets_ = (data) =>
   const handleBlur = () => {
     setEdit({ rowId: null, column: null });
   };
-  
+
   const handleDelete = (id) => {
     const updatedRows = data.filter((row) => row.id !== id);
     setData(updatedRows);
   };
 
-  
+
 
   useEffect(() => {
     const interval = setInterval(async () => {
@@ -202,7 +202,7 @@ const updateTargets_ = (data) =>
   }, []);
 
   const handleModalBlurDates = (e) => {
-    if (!datesDate){
+    if (!datesDate) {
       e.preventDefault();
       return
     }
@@ -219,7 +219,7 @@ const updateTargets_ = (data) =>
       }
       return row;
     });
-  
+
     setData(updatedRows);
   };
 
@@ -227,28 +227,33 @@ const updateTargets_ = (data) =>
 
 
     setModalInputFocus(false);
-    if (modalTarget.column == "socials"){
-      setSocialCache("");}
-    if (modalTarget.column == "notes"){
-      setNotesCache("");}
-    if (ModalTitle.column == "dates"){
-      setDatesCache("");}
-    
+    if (modalTarget.column == "socials") {
+      setSocialCache("");
+    }
+    if (modalTarget.column == "notes") {
+      setNotesCache("");
+    }
+    if (ModalTitle.column == "dates") {
+      setDatesCache("");
+    }
+
     if (!cache) return;
     let column = modalTarget.column;
     let id = modalTarget.id;
     let newValue = cache;
     const updatedRows = data.map((row) => {
       if (row.id === id) {
-        return { ...row, [column]:  row[column] + "\n"+ "[" + getTimestamp() + "]" + ": "+ "\n" + newValue + "\n" };
+        return { ...row, [column]: row[column] + "\n" + "[" + getTimestamp() + "]" + ": " + "\n" + newValue + "\n" };
       }
       return row;
     });
     setData(updatedRows);
   };
 
-  const setSymbolId = async (id, address)  => {
-    let id_ = await CoinMarketRequest(address=address);
+  const setSymbolId = async (id, address) => {
+    let currentSymbolId = latestData.current.filter(row => row.id === id && row.symbolId)
+    if ((currentSymbolId !== "wrong address") && (currentSymbolId.length > 0)) return;
+    let id_ = await CoinMarketRequest(address = address);
     const updatedRows = latestData.current.map((row) => {
       if (row.id === id) {
         return { ...row, symbolId: id_ };
@@ -258,11 +263,11 @@ const updateTargets_ = (data) =>
     setData(updatedRows);
   };
 
-  const setDexId = async (id, address)  => {
+  const setDexId = async (id, address) => {
     if (latestData.current.filter(row => row.id === id && row.dexId).length > 0) return;
-    let result = await DexScreenerRequest(address=address);
+    let result = await DexScreenerRequest(address = address);
 
-    let ids = result.map((row)=>[row.dexId, row.pairAddress])
+    let ids = result.map((row) => [row.dexId, row.pairAddress])
 
     console.log(`ids: ${ids}`)
     let cacheRow = {}
@@ -277,7 +282,7 @@ const updateTargets_ = (data) =>
 
     setData(updatedRows);
     ids.slice(1).forEach((item) => {
-      setData((data) => [...data, { ...cacheRow, dexId: item[0], pairAddressDex: item[1] , id: getNewId() }]);
+      setData((data) => [...data, { ...cacheRow, dexId: item[0], pairAddressDex: item[1], id: getNewId() }]);
     })
 
   };
@@ -417,210 +422,213 @@ const updateTargets_ = (data) =>
         </Modal.Footer>
       </Modal>
     </>
-      <h2 onClick={async () => console.log(data) } >Calculator</h2>
+      <>
+        <Modal show={show2} onHide={()=>{setShow2(false)}}>
+
+          <Modal.Header closeButton>
+            <Modal.Title>Edit {modalTarget.column}</Modal.Title>
+          </Modal.Header>
+          
+          <Modal.Body>
+          <form>
+            {/* <div style={{ display: 'flex' }} className="form-row"> */}
+              <div className="form-group">
+                <label htmlFor="inputName">Name</label>
+                <input style={{width: "100%"}} value={data?.find(row=>row.id === modalTarget.id)?.name} onChange={(e)=>{handleUpdate(modalTarget.id, "name", e.target.value)}} type="text" className="form-control" id="inputName" placeholder="Name" />
+              </div>
+              {/* <div className="form-group col-md-6">
+                <label htmlFor="inputDexId">DexId</label>
+                <input value={data?.find(row=>row.id === modalTarget.id)?.dexId} onChange={(e)=>{handleUpdate(modalTarget.id, "dexId", e.target.value)}} type="text" className="form-control" id="inputDexId" placeholder="DexId" />
+              </div> */}
+            {/* </div> */}
+
+            <div style={{ display: 'flex' }} className="form-row">
+            <div className="form-group pe-4">
+              <label htmlFor="inputLType">L.Type</label>
+              <select id="inputLType" value={data?.find(row=>row.id === modalTarget.id)?.listtype} onChange={(e)=>{handleUpdate(modalTarget.id, "listtype", e.target.value)}} className="form-control">
+                <option >Select</option>
+                {listType.map((listType, index)=>{
+                  return <option key={index}>{listType}</option>
+                })}
+              </select>
+            </div>
+            <div className="form-group" style={{ width: '100%' }}>
+              <label htmlFor="inputChain">Chain</label>
+              <input value={data?.find(row=>row.id === modalTarget.id)?.chain} onChange={(e)=>{handleUpdate(modalTarget.id, "chain", e.target.value)}} type="text" className="form-control" id="inputChain" placeholder="Chain" />
+            </div>
+            </div>
+
+
+            <div style={{ display: 'flex' }} className="form-row">
+            <div className="form-group pe-4">
+              <label htmlFor="inputLType">API</label>
+              <select id="inputLType" value={data?.find(row=>row.id === modalTarget.id)?.api} onChange={(e)=>{handleUpdate(modalTarget.id, "api", e.target.value)}} className="form-control">
+                <option >Choose...</option>
+                {apiOptions.map((api, index)=>{
+                  return <option key={index}>{api}</option>
+                })}
+              </select>
+            </div>
+            <div className="form-group" style={{ width: '100%' }}>
+              <label htmlFor="inputChain">Contact Address</label>
+              <input value={data?.find(row=>row.id === modalTarget.id)?.contact} onBlur={()=>{setSymbolId(modalTarget.id, data?.find(row=>row.id === modalTarget.id)?.contact); setDexId(modalTarget.id, data?.find(row=>row.id === modalTarget.id)?.contact)}} onChange={(e)=>{handleUpdate(modalTarget.id, "contact", e.target.value)}} type="text" className="form-control" id="inputChain" placeholder="Chain" />
+            </div>
+            </div>
+
+
+          <div className="form-row" style={{ display: 'flex' }}>
+            <div className="form-group col-md-6 ">
+              <label htmlFor="inputEMcap">E.Mcap</label>
+              <input  value={(data?.find(row=>row.id === modalTarget.id)?.mcap)} onChange={(e)=>{handleUpdate(modalTarget.id, "mcap", e.target.value, true)}}  type="text" className="form-control" id="inputEMcap" placeholder="E.Mcap" />
+            </div>
+
+            <div className="form-group col-md-6">
+              <label htmlFor="inputEPrice">E.Price</label>
+              <input type="number" value={data?.find(row=>row.id === modalTarget.id)?.price} onChange={(e)=>{handleUpdate(modalTarget.id, "price", e.target.value)}} className="form-control" id="inputEPrice" placeholder="E.Price" />
+            </div>
+          </div>
+
+
+            <div className="form-group">
+              <label htmlFor="inputBSize">B.Size</label>
+              <input  type="text" value={data?.find(row=>row.id === modalTarget.id)?.bag} onChange={(e)=>{handleUpdate(modalTarget.id, "bag", e.target.value, true)}} className="form-control" id="inputBSize" placeholder="B.Size" />
+            </div>
+
+            <div className="form-row" style={{ display: 'flex' }}>
+            <div className="form-group col-md-6">
+              <label htmlFor="inputFree">Free?</label>
+              <select id="inputFree" className="form-control" value={data?.find(row=>row.id === modalTarget.id)?.free} onChange={(e)=>{handleUpdate(modalTarget.id, "free", e.target.value)}}>
+                <option selected>Choose...</option>
+                {["Yes", "No"].map((free, index)=>{
+                  return <option key={index}>{free}</option>
+                })}
+                {/* Add options here */}
+              </select>
+            </div>
+            <div className="form-group col-md-6">
+              <label htmlFor="inputGFee">G.fee</label>
+              <input value={data?.find(row=>row.id === modalTarget.id)?.gfee} onChange={(e)=>{handleUpdate(modalTarget.id, "gfee", e.target.value)}} type="number" className="form-control" id="inputGFee" placeholder="G.fee" />
+            </div>
+            </div>
+
+
+            <div className="form-group">
+              <label htmlFor="inputTargets">Targets</label>
+              <input value={data?.find(row=>row.id === modalTarget.id)?.targets} onChange={(e)=>{handleUpdate(modalTarget.id, "targets", e.target.value, false, true)}} type="text" className="form-control" id="inputTargets" placeholder="Targets" />
+            </div>
+          </form>
+
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={handleClose}>
+              Close
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      </>
+      <h2 onClick={async () => setShow2(true)} >Calculator</h2>
       <table className="table table-striped custom-table">
         <thead>
-          <tr style={{fontSize: "10px"}}>
+          <tr style={{ fontSize: "10px" }}>
             {
-              headers.map((header, index) => <th style={{backgroundColor: fullHeaders[index].includes("[API]")? "orange": ""}} key={index}>{header}  {index!=0 && <FontAwesomeIcon icon={faInfoCircle} title={fullHeaders[index]} style={{ fontSize: '0.6rem', cursor: 'pointer' }}  />}</th>)
+              headers.map((header, index) => <th style={{ backgroundColor: fullHeaders[index].includes("[API]") ? "orange" : "" }} key={index}>{header}  {index != 0 && <FontAwesomeIcon icon={faInfoCircle} title={fullHeaders[index]} style={{ fontSize: '0.6rem', cursor: 'pointer' }} />}</th>)
             }
           </tr>
         </thead>
         <tbody>
           {data?.map((row, index) => (
             <>
-            <tr key={index}>
-              <td>{index + 1}</td>
+              <tr key={index}>
+                <td >{index + 1}</td>
 
-              {edit.rowId == row.id && edit.column == "name" ? (<input
-                type="text"
-                value={row.name}
-                
-                spellCheck="false"
-                onChange={(e) => handleUpdate(row.id, 'name', e.target.value)}
-                autoFocus
-                onBlur={handleBlur}
-              />) : <td style={{ cursor: 'pointer' }} onClick={() => { handleFocus(row.id, 'name') }}>{row.name} </td>}
+                <td>{row.name} </td>
 
 
-              {edit.rowId == row.id && edit.column == "dexId" ? (<input
-                type="text"
-                value={row.dexId}
-                spellCheck="false"
-              />) : <td style={{ cursor: 'pointer' }}>{row.dexId} </td>}
+                <td>{row.dexId} </td>
 
-          <td >{ row.pairAddressDex.slice(0,3)} {row.pairAddressDex?"..":""}{ row.pairAddressDex.slice(-3)}</td>
+                <td >{row.pairAddressDex.slice(0, 3)} {row.pairAddressDex ? ".." : ""}{row.pairAddressDex.slice(-3)}</td>
 
-            <td style={{ cursor: 'pointer'}}>
-                  <select onChange={(e) => handleUpdate(row.id, 'listtype', e.target.value)} value={row.listtype} style={{border: "none", backgroundColor: "transparent"}} autoFocus onBlur={handleBlur}>
-                <option>Select</option>
-                {listType.map((option, index) => {
-                    return (
-                        <option key={index}>
-                            {option}
-                        </option>
-                    );
-                })}
-            </select>
-                </td>
+                <td>{row.listtype}</td>
 
 
-              {edit.rowId == row.id && edit.column == "chain" ? (<input
-                type="text"
-                value={row.chain}
-                spellCheck="false"
-                onChange={(e) => handleUpdate(row.id, 'chain', e.target.value)}
-                autoFocus 
-                onBlur={handleBlur}
-              />) : <td style={{ cursor: 'pointer' }} onClick={() => { handleFocus(row.id, 'chain') }}>{row.chain}</td>}
+                <td>{row.chain}</td>
 
 
-                <td style={{ cursor: 'pointer'}}>
-                  <select onFocus={(e)=>setHandleingApis(true)} onChange={(e) => {handleUpdate(row.id, 'api', e.target.value);}} value={row.api} style={{border: "none", backgroundColor: "transparent"}} autoFocus onBlur={(e)=>{handleBlur(e); setHandleingApis(false);}}>
-                <option>Select</option>
-                {apiOptions.map((option, index) => {
-                    return (
-                        <option key={index}>
-                            {option}
-                        </option>
-                    );
-                })}
-            </select>
-                </td>
-              
-
-
-              {edit.rowId == row.id && edit.column == "contact" ? (<input
-                type="text"
-                value={row.contact}
-                spellCheck="false"
-                onChange={(e) => {handleUpdate(row.id, 'contact', e.target.value)}}
-                autoFocus
-                onBlur={(e)=>{handleBlur(e); setDexId(row.id, row.contact); setSymbolId(row.id, row.contact);}}
-              />) : <td style={{ cursor: 'pointer', backgroundColor: row.symbolId=="wrong address"?"red":"" }} onClick={() => {handleFocus(row.id, 'contact')}}>{row.contact.slice(0,3)}{row.contact?"..":""}{row.contact.slice(-3)}</td>}
-
-
-              {edit.rowId == row.id && edit.column == "mcap" ? (<input
-                type="text"
-                value={row.mcap}
-                spellCheck="false"
-                onChange={(e) => handleUpdate(row.id, 'mcap', e.target.value, true)}
-                autoFocus
-                onBlur={handleBlur}
-              />) : <td style={{ cursor: 'pointer' }} onClick={() => { handleFocus(row.id, 'mcap') }}>${formatNumber(row.mcap)}</td>}
-              
+                <td>{row.api}</td>
 
 
 
-              {edit.rowId == row.id && edit.column == "price" ? (<input
-                type="text"
-                value={row.price}
-                spellCheck="false"
-                onChange={(e) => handleUpdate(row.id, 'price', e.target.value, true)}
-                autoFocus
-                onBlur={handleBlur}
-              />) : <td style={{ cursor: 'pointer' }} onClick={() => { handleFocus(row.id, 'price') }}>{row.price?"$":""}{formatPrice(row.price)}</td>}
+                <td style={{ cursor: 'pointer', backgroundColor: row.symbolId == "wrong address" ? "red" : "" }}>{row.contact.slice(0, 3)}{row.contact ? ".." : ""}{row.contact.slice(-3)}</td>
+
+
+                <td>${formatNumber(row.mcap)}</td>
 
 
 
-              {edit.rowId == row.id && edit.column == "bag" ? (<input
-                type="number"
-                value={row.bag}
-                spellCheck="false"
-                onChange={(e) => handleUpdate(row.id, 'bag', e.target.value)}
-                autoFocus
-                onBlur={handleBlur}
-              />) : <td style={{ cursor: 'pointer' }} onClick={() => { handleFocus(row.id, 'bag') }}>{row.bag}</td>}
+
+                <td>{row.price ? "$" : ""}{formatPrice(row.price)}</td>
 
 
 
-            <td style={{ cursor: 'pointer'}}>
-                  <select onChange={(e) => handleUpdate(row.id, 'free', e.target.value)} value={row.free} style={{border: "none", backgroundColor: "transparent"}} autoFocus onBlur={handleBlur}>
-                <option>Select</option>
-                {["Yes", "No"].map((option, index) => {
-                    return (
-                        <option key={index}>
-                            {option}
-                        </option>
-                    );
-                })}
-            </select>
-                </td>
-
-                {edit.rowId == row.id && edit.column == "gfee" ? (<input
-                type="text"
-                value={row.gfee}
-                spellCheck="false"
-                onChange={(e) => handleUpdate(row.id, 'gfee', e.target.value, true)}
-                autoFocus
-                onBlur={handleBlur}
-              />) : <td style={{ cursor: 'pointer' }} onClick={() => { handleFocus(row.id, 'gfee') }}>${formatNumber(row.gfee)}</td>}
-
-                
-              {edit.rowId == row.id && edit.column == "targets" ? (<input
-                type="text"
-                value={row.targets}
-                spellCheck="false"
-                onChange={(e) => handleUpdate(row.id, 'targets', e.target.value, false, true)}
-                autoFocus
-                onBlur={handleBlur}
-              />) : <td onClick={() => { handleFocus(row.id, 'targets') }}>{row.targets}</td>}
+                <td>{row.bag}</td>
 
 
-            {edit.rowId == row.id && edit.column == "socials" ? (<textarea
-                type="text"
-                value={socials}
-                spellCheck="false"
-                autoFocus
-                onBlur={handleBlur}
-              />) : <td style={{ cursor: 'pointer' }} onClick={()=>handleShow(row.id, "socials")}>{row.socials.slice(0, 10)}</td>}
+
+                <td>{row.free}</td>
+
+                <td>${formatNumber(row.gfee)}</td>
 
 
-            {edit.rowId == row.id && edit.column == "notes" ? (<textarea
-                type="text"
-                // give bootstrap classes to make it look good
-                
-                value={row.notes}
-                spellCheck="false"
-                onChange={(e) => handleUpdate(row.id, 'notes', e.target.value, false, true)}
-                autoFocus
-                onBlur={handleBlur}
-              />) : <td style={{ cursor: 'pointer' }} onClick={()=>handleShow(row.id, "notes")}>{row.notes && row.notes.slice(0, 10)}</td>}
 
-            {edit.rowId == row.id && edit.column == "dates" ? (<textarea
-                type="text"
-                // give bootstrap classes to make it look good
-                
-                value={row.dates}
-                spellCheck="false"
-                onChange={(e) => handleUpdate(row.id, 'dates', e.target.value, false, true)}
-                autoFocus
-                onBlur={handleBlur}
-              />) : <td style={{ cursor: 'pointer' }} onClick={()=>handleShow(row.id, "dates")}>{row.dates && row.dates.slice(0, 10)}</td>}   
-
-              <td style={{ cursor: 'pointer' }}>{row.apiPrice} </td>
-
-            <td style={{ cursor: 'pointer' }}>{row.volume} </td>
-
-            <td style={{ cursor: 'pointer' }}>{row.fullyDilutedMarketCap} </td>
+                <td>{row.targets}</td>
 
 
-            <td style={{ cursor: 'pointer' }}>{row.totalSupply} </td>
-
-            <td style={{ cursor: 'pointer' }}>{row.liquidity} </td>  
-
-             <td style={{ cursor: 'pointer' }}>{row.circulatingSupply} </td>
+                <td>{row.socials.slice(0, 10)}</td>
 
 
-              <td><FontAwesomeIcon icon={faTrash} onClick={() => handleDelete(row.id)} style={{ fontSize: '1rem', cursor: 'pointer' }}  /></td>
-              
-            </tr>
+                {edit.rowId == row.id && edit.column == "notes" ? (<textarea
+                  type="text"
+                  value={row.notes}
+                  spellCheck="false"
+                  onChange={(e) => handleUpdate(row.id, 'notes', e.target.value, false, true)}
+                  autoFocus
+                  onBlur={handleBlur}
+                />) : <td style={{ cursor: 'pointer' }} onClick={() => handleShow(row.id, "notes")}>{row.notes && row.notes.slice(0, 10)}</td>}
+
+
+                {edit.rowId == row.id && edit.column == "dates" ? (<textarea
+                  type="text"
+                  value={row.dates}
+                  spellCheck="false"
+                  onChange={(e) => handleUpdate(row.id, 'dates', e.target.value, false, true)}
+                  autoFocus
+                  onBlur={handleBlur}
+                />) : <td style={{ cursor: 'pointer' }} onClick={() => handleShow(row.id, "dates")}>{row.dates && row.dates.slice(0, 10)}</td>}
+
+                <td>{row.apiPrice} </td>
+
+                <td>{row.volume} </td>
+
+                <td>{row.fullyDilutedMarketCap} </td>
+
+
+                <td>{row.totalSupply} </td>
+
+                <td>{row.liquidity} </td>
+
+                <td>{row.circulatingSupply} </td>
+
+
+                <td><FontAwesomeIcon icon={faEdit} onClick={() => {setModalTarget({ id: row.id, column: "dates" }); setShow2(true)} } style={{ fontSize: '1rem', cursor: 'pointer' }}/></td>
+                <td><FontAwesomeIcon icon={faTrash} onClick={() => handleDelete(row.id)} style={{ fontSize: '1rem', cursor: 'pointer' }} /></td>
+
+              </tr>
             </>
-            
+
           ))}
           <tr>
-          <td colSpan="100%" style={{ cursor: 'pointer' }} onClick={() => { handleAdd()}} className="text-center"><FontAwesomeIcon icon={faPlus} style={{ fontSize: '1rem'}}  /></td>
-        </tr>
+            <td colSpan="100%" style={{ cursor: 'pointer' }} onClick={() => { handleAdd() }} className="text-center"><FontAwesomeIcon icon={faPlus} style={{ fontSize: '1rem' }} /></td>
+          </tr>
         </tbody>
       </table>
     </div>
