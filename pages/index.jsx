@@ -619,7 +619,7 @@ const Index = ({ username, password }) => {
                 <td>{row.circulatingSupply} </td>
 
 
-                <td><FontAwesomeIcon icon={faEdit} onClick={() => {setModalTarget({ id: row.id, column: "dates" }); setShow2(true)} } style={{ fontSize: '1rem', cursor: 'pointer' }}/></td>
+                <td><FontAwesomeIcon icon={faEdit} onClick={() => {setModalTarget({id: row.id, column: "dates"}); setShow2(true)} } style={{ fontSize: '1rem', cursor: 'pointer' }}/></td>
                 <td><FontAwesomeIcon icon={faTrash} onClick={() => handleDelete(row.id)} style={{ fontSize: '1rem', cursor: 'pointer' }} /></td>
 
               </tr>
@@ -627,7 +627,7 @@ const Index = ({ username, password }) => {
 
           ))}
           <tr>
-            <td colSpan="100%" style={{ cursor: 'pointer' }} onClick={() => { handleAdd() }} className="text-center"><FontAwesomeIcon icon={faPlus} style={{ fontSize: '1rem' }} /></td>
+            <td colSpan="100%" style={{ cursor: 'pointer' }} onClick={() => { let newRow=handleAdd(); setModalTarget({id: newRow, column: "dates"}); setShow2(true)}} className="text-center"><FontAwesomeIcon icon={faPlus} style={{ fontSize: '1rem' }} /></td>
           </tr>
         </tbody>
       </table>
