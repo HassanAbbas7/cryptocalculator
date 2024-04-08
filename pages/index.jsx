@@ -375,7 +375,7 @@ const Index = ({ username, password }) => {
                 let otherDate = new Date(date.split("---->")[0])
                 const currentDate = new Date();
                 const differenceMs = otherDate - currentDate;
-                const differenceDays = Math.floor(differenceMs / (1000 * 60 * 60 * 24));
+                const differenceDays = Math.floor(differenceMs / (1000 * 60 * 60 * 24)) + 1;
 
                 const strikeThrough = differenceDays <  0? true: false
                 const boldAndGreen = differenceDays == 0? true: false
@@ -526,7 +526,7 @@ const Index = ({ username, password }) => {
           </Modal.Footer>
         </Modal>
       </>
-      <h2 onClick={async () => setShow2(true)} >Calculator</h2>
+      <h2 >Calculator</h2>
       <table className="table table-striped custom-table">
         <thead>
           <tr style={{ fontSize: "10px" }}>
