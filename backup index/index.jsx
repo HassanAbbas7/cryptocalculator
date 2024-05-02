@@ -1,7 +1,7 @@
 import Table from 'react-bootstrap/Table';
 import { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTrash, faLink, faEdit, faInfoCircle, faCopy } from '@fortawesome/fontawesome-free-solid';
+import { faPlus, faTrash, faLink, faEdit, faInfoCircle } from '@fortawesome/fontawesome-free-solid';
 import { updateData, getData } from '../components/constants';
 import Linkify from '../components/Linkify';
 import Button from 'react-bootstrap/Button';
@@ -611,27 +611,94 @@ const Index = ({ username, password }) => {
       <h2 onClick={()=>console.log(data)}>Calculator </h2>
       <table className="table table-striped custom-table">
         <thead>
-          <tr>
-            <th>#</th>
-            <th>Column 1</th>
-            <th>Column 2</th>
-            <th>Edit</th>
-            <th>Delete</th>
+          <tr style={{ fontSize: "10px" }}>
+            {
+              headers.map((header, index) => <th style={{ backgroundColor: fullHeaders[index].includes("[API]") ? "orange" : "" }} key={index}>{header}  {index != 0 && <FontAwesomeIcon icon={faInfoCircle} title={fullHeaders[index]} style={{ fontSize: '0.6rem', cursor: 'pointer' }} />}</th>)
+            }
+            <th>Seconds</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            
+            {data && <td>{data[0]?.name} | {data[0]?.chain} | {data[0]?.chainId} <br />{data[0]?.price}/{data[0]?.tokensReceived/data[0]?.tokensSpent} | {data[0]?.fullyDilutedMarketCap}/{data[0]?.mcap} <br /> m5: {data[0]["m5"]? data[0]["m5"] : "None"} h1: {data[0]["h1"]? data[0]["h1"] : "None"} h6: {data[0]["h6"]? data[0]["h6"] : "None"} h6: {data[0]["h6"]? data[0]["h6"] : "None"} h24: {data[0]["h24"]? data[0]["h24"] : "None"} <br /> Source:</td>}
           </tr>
           {data?.map((row, index) => (
             <>
               <tr key={index}>
                 <td >{index + 1}</td>
 
+                <td>{row.name} </td>
 
-                <td>{row?.name} | {row?.chain} | {row?.chainId} <br /> <p style={{color: 'green'}}>${row?.price}</p> /{row?.tokensReceived/row?.tokensSpent} | {row?.fullyDilutedMarketCap}/{row?.mcap} <br /> m5: {row["m5"]? row["m5"] : "None"} h1: {row["h1"]? row["h1"] : "None"} h6: {row["h6"]? row["h6"] : "None"} h6: {row["h6"]? row["h6"] : "None"} h24: {row["h24"]? row["h24"] : "None"} <br /> Source: {row?.api}</td>
 
-                <td>State Token: {row.contact} <FontAwesomeIcon icon={faCopy} onClick={() => {navigator.clipboard.writeText(row.contact)}} style={{cursor: 'pointer' }}/> <br /> Pair Address: {row.pairContract}<FontAwesomeIcon icon={faCopy} onClick={() => {navigator.clipboard.writeText(row.pairContract)}} style={{cursor: 'pointer' }}/> <br /> Social: {row.social} <br /> Notes: {row.notes} </td>
+                <td>{row.dexId} </td>
+
+                <td >{row.pairAddressDex.slice(0, 3)} {row.pairAddressDex ? ".." : ""}{row.pairAddressDex.slice(-3)}</td>
+                
+
+                <td>{row.listtype}</td>
+
+
+                <td>{row.chain}</td>
+
+
+                <td>{row.api}</td>
+
+
+
+                <td style={{ cursor: 'pointer', backgroundColor: row.symbolId == "wrong address" ? "red" : "" }}>{row.contact.slice(0, 3)}{row.contact ? ".." : ""}{row.contact.slice(-3)}</td>
+
+                <td >{row.pairContract?.slice(0, 3)}{row.pairContract ? ".." : ""}{row.pairContract?.slice(-3)}</td>
+
+
+                <td>${formatNumber(row.mcap)}</td>
+
+
+
+
+                <td>{row.price ? "$" : ""}{formatPrice(row.price)}</td>
+
+
+
+                <td>{row.bag}</td>
+
+
+
+                <td>{row.free}</td>
+
+                <td>${formatNumber(row.gfee)}</td>
+
+
+
+                <td>{row.targets}</td>
+
+
+                <td>{row.socials.slice(0, 10)}</td>
+
+
+                <td style={{ cursor: 'pointer' }} onClick={() => handleShow(row.id, "notes")}>{row.notes && row.notes.slice(0, 10)}</td>
+
+
+                {edit.rowId == row.id && edit.column == "dates" ? (<textarea
+                  type="text"
+                  value={row.dates}
+                  spellCheck="false"
+                  onChange={(e) => handleUpdate(row.id, 'dates', e.target.value, false, true)}
+                  autoFocus
+                  onBlur={handleBlur}
+                />) : <td style={{ cursor: 'pointer' }} onClick={() => handleShow(row.id, "dates")}>{row.dates && row.dates.slice(0, 10)}</td>}
+
+                <td>{parseFloat(row.apiPrice).toFixed(6)} </td>
+
+                <td>{parseFloat(row.volume).toFixed(3)} </td>
+                
+                <td>{parseFloat(row.fullyDilutedMarketCap).toFixed(6)} </td>
+
+
+                <td>{formatNumber(row.totalSupply)} </td>
+
+                <td>{parseFloat(row.liquidity).toFixed(6)} </td>
+
+                <td>{row.circulatingSupply} </td>
 
 
                 <td><FontAwesomeIcon icon={faEdit} onClick={() => {setModalTarget({id: row.id, column: "dates"}); setShow2(true)} } style={{ fontSize: '1rem', cursor: 'pointer' }}/></td>

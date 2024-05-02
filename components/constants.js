@@ -59,6 +59,7 @@ async function updateData(username, password, json) {
 
     } catch (error) {
       console.error('Error occurred during the POST request:', error);
+      return undefined
     }
   }
 
@@ -81,6 +82,7 @@ async function getData(username, password) {
 
     } catch (error) {
       console.error('Error occurred during the POST request:', error);
+      return undefined
     }
   }
 
