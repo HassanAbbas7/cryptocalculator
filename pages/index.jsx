@@ -629,7 +629,7 @@ const Index = ({ username, password }) => {
                 <td >{index + 1}</td>
 
 
-                <td>{row?.name} | {row?.chain} | {row?.chainId} <br /> <p style={{color: 'green'}}>${row?.price}</p> /{row?.tokensReceived/row?.tokensSpent} | {row?.fullyDilutedMarketCap}/{row?.mcap} <br /> m5: {row["m5"]? row["m5"] : "None"} h1: {row["h1"]? row["h1"] : "None"} h6: {row["h6"]? row["h6"] : "None"} h6: {row["h6"]? row["h6"] : "None"} h24: {row["h24"]? row["h24"] : "None"} <br /> Source: {row?.api}</td>
+                <td>{row?.name} | {row?.chain} | {row?.chainId} <br /> <p style={{color: 'green'}}>${row?.apiPrice}</p> /{row?.tokensReceived/row?.tokensSpent} | {row?.fullyDilutedMarketCap}/{row?.mcap} <br /> m5: {row["m5"]? row["m5"] : "None"} h1: {row["h1"]? row["h1"] : "None"} h6: {row["h6"]? row["h6"] : "None"} h6: {row["h6"]? row["h6"] : "None"} h24: {row["h24"]? row["h24"] : "None"} <br /> Source: {row?.api}</td>
 
                 <td>State Token: {row.contact} <FontAwesomeIcon icon={faCopy} onClick={() => {navigator.clipboard.writeText(row.contact)}} style={{cursor: 'pointer' }}/> <br /> Pair Address: {row.pairContract}<FontAwesomeIcon icon={faCopy} onClick={() => {navigator.clipboard.writeText(row.pairContract)}} style={{cursor: 'pointer' }}/> <br /> Social: {row.social} <br /> Notes: {row.notes} </td>
 
