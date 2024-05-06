@@ -16,7 +16,7 @@ const Index = ({ username, password }) => {
 
   const [apiOptions, setApiOptions] = useState(["CMC", "DS"])
   const [listType, setListType] = useState(["Active Trades", "Watch List", "Archived", "MoonBags list"])
-  const [edit, setEdit] = useState({ rowId: null, column: null });
+  const [edit, setEdit] = useState(false);
   const [data, setData] = useState();
   const latestData = useRef(data);
   const [targets, setTargets] = useState([{ "target1": "", "target2": "", "target3": "" }]);
@@ -191,13 +191,6 @@ const Index = ({ username, password }) => {
     }
   }
 
-  const handleFocus = (id, column) => {
-    setEdit({ rowId: id, column });
-  };
-
-  const handleBlur = () => {
-    setEdit({ rowId: null, column: null });
-  };
 
   const handleDelete = (id) => {
     const updatedRows = data.filter((row) => row.id !== id);
@@ -231,6 +224,7 @@ const Index = ({ username, password }) => {
       e.preventDefault();
       return
     }
+    setEdit(false)
     setModalInputFocus(false);
     setDatesCache("");
     setDatesDate("");
@@ -247,6 +241,8 @@ const Index = ({ username, password }) => {
 
     setData(updatedRows);
   };
+
+
 
   const handleModalBlur = (cache) => {
 
@@ -489,10 +485,28 @@ const Index = ({ username, password }) => {
                 })}
               </select>
             </div>
+
+
             <div className="form-group" style={{ width: '100%' }}>
               <label htmlFor="inputChain">Contact Address</label>
               <input value={data?.find(row=>row.id === modalTarget.id)?.contact} onBlur={()=>{setSymbolId(modalTarget.id, data?.find(row=>row.id === modalTarget.id)?.contact); setDexId(modalTarget.id, data?.find(row=>row.id === modalTarget.id)?.contact)}} onChange={(e)=>{handleUpdate(modalTarget.id, "contact", e.target.value)}} type="text" className="form-control" id="inputChain" placeholder="Chain" />
             </div>
+            </div>
+
+                <h2 className="my-3 text-center">CMC</h2>
+                <div className="my-2" style={{width: "100%", borderTop: "2px solid #bbb"}}></div>
+            <div className="form-group pe-4">
+              <label htmlFor="inputLType">CMC URL:</label>
+              <input type="text" value={data?.find(row=>row.id === modalTarget.id)?.cmcUrl} onChange={(e)=>{handleUpdate(modalTarget.id, "cmcUrl", e.target.value)}} className="form-control" />
+            </div>
+
+            
+
+                <h2 className="my-3 text-center">DS</h2>
+                <div className="my-2" style={{width: "100%", borderTop: "2px solid #bbb"}}></div>
+            <div className="form-group" style={{ width: '100%' }}>
+              <label htmlFor="inputChain">DS URL</label>
+              <input type="text" value={data?.find(row=>row.id === modalTarget.id)?.dsUrl} onChange={(e)=>{handleUpdate(modalTarget.id, "dsUrl", e.target.value)}} className="form-control" />
             </div>
 
             <div className="form-group" style={{ width: '100%' }}>
@@ -526,52 +540,15 @@ const Index = ({ username, password }) => {
             </div>
           </div>
           <p style={{fontWeight: "200", fontStyle: "italic"}} >Effective Entry: {data?.find(row=>row.id === modalTarget.id)?.tokensReceived / data?.find(row=>row.id === modalTarget.id)?.tokensSpent}</p>
-          
 
 
+          {/* <h3 className='text-center'>Socials and Notes</h3>
+          <div className="my-2" style={{width: "100%", borderTop: "2px solid #bbb"}}></div>
 
-            <div className="form-group">
-              <label htmlFor="inputBSize">B.Size</label>
-              <input  type="text" value={data?.find(row=>row.id === modalTarget.id)?.bag} onChange={(e)=>{handleUpdate(modalTarget.id, "bag", e.target.value, true)}} className="form-control" id="inputBSize" placeholder="B.Size" />
-            </div>
+          <h5>Socials</h5>
+          {"[" + getTimestamp() + "]: "}
+          <textarea autoFocus rows={10} style={{width: "100%"}} value={socialCache} onChange={(e)=>{setSocialCache(e.target.value)}} type="text" onBlur={()=>{handleModalBlur(socialCache); }} /> */}
 
-            <div className="form-row" style={{ display: 'flex' }}>
-            <div className="form-group col-md-6">
-              <label htmlFor="inputFree">Free?</label>
-              <select id="inputFree" className="form-control" value={data?.find(row=>row.id === modalTarget.id)?.free} onChange={(e)=>{handleUpdate(modalTarget.id, "free", e.target.value)}}>
-                <option selected>Choose...</option>
-                {["Yes", "No"].map((free, index)=>{
-                  return <option key={index}>{free}</option>
-                })}
-                {/* Add options here */}
-              </select>
-            </div>
-            <div className="form-group col-md-6">
-              <label htmlFor="inputGFee">G.fee</label>
-              <input value={data?.find(row=>row.id === modalTarget.id)?.gfee} onChange={(e)=>{handleUpdate(modalTarget.id, "gfee", e.target.value)}} type="number" className="form-control" id="inputGFee" placeholder="G.fee" />
-            </div>
-            </div>
-
-
-            
-
-            <div className="form-row" style={{ display: 'flex', padding: "20px" }}>
-
-            <div className="form-group col-md-6">
-              <h4>Notes:</h4>
-              <Button onClick={(e) => {e.preventDefault(); handleShow(modalTarget.id, "notes")}} variant="secondary">
-              Edit Notes
-            </Button>
-            </div>
-
-            <div className="form-group col-md-6">
-              <h4>Dates:</h4>
-            <Button onClick={(e) => {e.preventDefault(); handleShow(modalTarget.id, "dates")}} variant="secondary">
-              Edit Dates
-            </Button>
-            </div>
-
-            </div>
 
                 <h3 className='text-center'>Targets</h3>
             <div className="form-row" style={{ display: 'flex' }}>
@@ -596,7 +573,35 @@ const Index = ({ username, password }) => {
               <input type="number" value={data?.find(row=>row.id === modalTarget.id)?.target4} onChange={(e)=>{handleUpdate(modalTarget.id, "target4", e.target.value)}} className="form-control" id="inputEPrice" placeholder="E.Price" />
             </div>
           </div>
-            
+
+          <h2 className='text-center my-2' >Dates</h2>
+          <div className="my-2" style={{width: "100%", borderTop: "2px solid #bbb"}}></div>
+            {data?.map((row, index)=>{
+            if (row.id == modalTarget.id) {
+              return row[modalTarget.column].split('\n').map((date, index)=>{
+
+                let otherDate = new Date(date.split("---->")[0])
+                const currentDate = new Date();
+                const differenceMs = otherDate - currentDate;
+                const differenceDays = Math.floor(differenceMs / (1000 * 60 * 60 * 24)) + 1;
+
+                const strikeThrough = differenceDays <  0? true: false
+                const boldAndGreen = differenceDays == 0? true: false
+                const orange = (differenceDays > 0 && differenceDays < 5)? true: false
+
+                return <p style={{fontWeight: boldAndGreen? "bold":"", backgroundColor: orange? "orange": boldAndGreen? "green": "", textDecoration: strikeThrough? "line-through": ""}} key={index}>{date}</p>
+              
+              })
+            }
+          })}
+           <>
+           
+           {
+            edit && <><input type='date' className="form-control" value={datesDate} onChange={(e)=>{setDatesDate(e.target.value)}}></input>
+          <textarea className='my-2' autoFocus rows={10} style={{width: "100%"}} value={datesCache} onChange={(e)=>{setDatesCache(e.target.value)}} type="text" onBlur={(e)=>{handleModalBlurDates(e);}} /></>
+           }
+           <div style={{ cursor: 'pointer', padding: '0.5rem' }} onClick={()=>setEdit(true)} className="text-center"><FontAwesomeIcon icon={faPlus} style={{ fontSize: '1rem'}}  /></div>
+          </>
           </form>
 
           </Modal.Body>
@@ -615,12 +620,14 @@ const Index = ({ username, password }) => {
             <th>#</th>
             <th>Column 1</th>
             <th>Column 2</th>
-            <th>Edit</th>
-            <th>Delete</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr>
+          <p style={{color: 'green'}}></p>
+          
+          
             
           </tr>
           {data?.map((row, index) => (
@@ -628,15 +635,32 @@ const Index = ({ username, password }) => {
               <tr key={index}>
                 <td >{index + 1}</td>
 
+                
+                <td>{row?.name} | {row?.chain} | {row?.chainId} <br /> 
+                
+                <p>${parseFloat(row?.apiPrice).toFixed(5)} <span style={{color: 'green'}}> ({(((row?.apiPrice - ((row?.tokensReceived/row?.tokensSpent)? (row?.tokensReceived/row?.tokensSpent) : row?.price)) / ((row?.tokensReceived/row?.tokensSpent)? (row?.tokensReceived/row?.tokensSpent) :  row?.price))*100).toFixed(5)}%) </span>
+                /{row?.tokensReceived/row?.tokensSpent}
+                </p>
 
-                <td>{row?.name} | {row?.chain} | {row?.chainId} <br /> <p style={{color: 'green'}}>${row?.apiPrice}</p> /{row?.tokensReceived/row?.tokensSpent} | {row?.fullyDilutedMarketCap}/{row?.mcap} <br /> m5: {row["m5"]? row["m5"] : "None"} h1: {row["h1"]? row["h1"] : "None"} h6: {row["h6"]? row["h6"] : "None"} h6: {row["h6"]? row["h6"] : "None"} h24: {row["h24"]? row["h24"] : "None"} <br /> Source: {row?.api}</td>
 
-                <td>State Token: {row.contact} <FontAwesomeIcon icon={faCopy} onClick={() => {navigator.clipboard.writeText(row.contact)}} style={{cursor: 'pointer' }}/> <br /> Pair Address: {row.pairContract}<FontAwesomeIcon icon={faCopy} onClick={() => {navigator.clipboard.writeText(row.pairContract)}} style={{cursor: 'pointer' }}/> <br /> Social: {row.social} <br /> Notes: {row.notes} </td>
+                  {row?.fullyDilutedMarketCap}/{row?.mcap}
+
+                  <br /> m5: {row["m5"]? row["m5"] : "None"} h1: {row["h1"]? row["h1"] : "None"} h6: {row["h6"]? row["h6"] : "None"} h6: {row["h6"]? row["h6"] : "None"} h24: {row["h24"]? row["h24"] : "None"} <br /> Source: {row?.api}</td>
+
+                <td>State Token: {(row.contact).slice(0, 10)}....{(row.contact).slice(-10)} <FontAwesomeIcon icon={faCopy} onClick={() => {navigator.clipboard.writeText(row.contact)}} style={{cursor: 'pointer' }}/> <br /> Pair Address: {(row.pairContract).slice(0, 10)}....{(row.pairContract).slice(-10)}<FontAwesomeIcon icon={faCopy} onClick={() => {navigator.clipboard.writeText(row.pairContract)}} style={{cursor: 'pointer' }}/> <br /> Social: {row.social} <br /> Notes: {row.notes} </td>
 
 
-                <td><FontAwesomeIcon icon={faEdit} onClick={() => {setModalTarget({id: row.id, column: "dates"}); setShow2(true)} } style={{ fontSize: '1rem', cursor: 'pointer' }}/></td>
-                <td><FontAwesomeIcon icon={faTrash} onClick={() => handleDelete(row.id)} style={{ fontSize: '1rem', cursor: 'pointer' }} /></td>
-
+                <td><FontAwesomeIcon icon={faEdit} onClick={() => {setModalTarget({id: row.id, column: "dates"}); setShow2(true)} } style={{ fontSize: '1rem', cursor: 'pointer' }}/>
+                <br />
+                <FontAwesomeIcon icon={faTrash} onClick={() => handleDelete(row.id)} style={{ fontSize: '1rem', cursor: 'pointer' }} />
+                
+                <br />
+              <div>
+                <p style={{textDecoration: "underline", color: "blue", cursor: "pointer"}} onClick={() => {setModalTarget({id: row.id, column: "notes"}); setShow(true)}}>Edit notes</p>
+                <p style={{textDecoration: "underline", color: "blue", cursor: "pointer"}} onClick={() => {setModalTarget({id: row.id, column: "socials"}); setShow(true)}}>Edit social</p>
+                <p style={{textDecoration: "underline", color: "blue", cursor: "pointer"}} onClick={() => {setModalTarget({id: row.id, column: "dates"}); setShow(true)}}>Edit Dates</p>
+              </div>
+                </td>
               </tr>
             </>
 
