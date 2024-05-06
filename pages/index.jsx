@@ -647,7 +647,7 @@ const Index = ({ username, password }) => {
 
                   <br /> m5: {row["m5"]? row["m5"] : "None"} h1: {row["h1"]? row["h1"] : "None"} h6: {row["h6"]? row["h6"] : "None"} h6: {row["h6"]? row["h6"] : "None"} h24: {row["h24"]? row["h24"] : "None"} <br /> Source: {row?.api}</td>
 
-                <td>State Token: {(row?.contact).slice(0, 10)}....{(row?.contact).slice(-10)} <FontAwesomeIcon icon={faCopy} onClick={() => {navigator.clipboard.writeText(row?.contact)}} style={{cursor: 'pointer' }}/> <br /> Pair Address: {(row?.pairContract).slice(0, 10)}....{(row?.pairContract).slice(-10)}<FontAwesomeIcon icon={faCopy} onClick={() => {navigator.clipboard.writeText(row?.pairContract)}} style={{cursor: 'pointer' }}/> <br /> Social: {row?.social} <br /> Notes: {row?.notes} </td>
+                <td>State Token: {(row?.contact)?.slice(0, 10)}....{(row?.contact)?.slice(-10)} <FontAwesomeIcon icon={faCopy} onClick={() => {navigator.clipboard.writeText(row?.contact)}} style={{cursor: 'pointer' }}/> <br /> Pair Address: {(row?.pairContract)?.slice(0, 10)}....{(row?.pairContract)?.slice(-10)}<FontAwesomeIcon icon={faCopy} onClick={() => {navigator.clipboard.writeText(row?.pairContract)}} style={{cursor: 'pointer' }}/> <br /> Social: {row?.social} <br /> Notes: {row?.notes} </td>
 
 
                 <td><FontAwesomeIcon icon={faEdit} onClick={() => {setModalTarget({id: row.id, column: "dates"}); setShow2(true)} } style={{ fontSize: '1rem', cursor: 'pointer' }}/>
