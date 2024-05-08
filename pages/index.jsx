@@ -573,10 +573,10 @@ const Index = ({ username, password }) => {
           {"[" + getTimestamp() + "]: "}
           <textarea autoFocus rows={10} style={{width: "100%"}} value={socialCache} onChange={(e)=>{setSocialCache(e.target.value)}} type="text" onBlur={()=>{handleModalBlur(socialCache); }} /> */}
       
-     {!(data?.find(row=>row.id===modalTarget.id).socials && data?.find(row=>row.id===modalTarget.id).notes) && <><h3 className='text-center'>Website, Socials, Notes:</h3>
+     {!(data?.find(row=>row.id===modalTarget.id)?.socials && data?.find(row=>row.id===modalTarget.id)?.notes) && <><h3 className='text-center'>Website, Socials, Notes:</h3>
       <div className="my-2" style={{width: "100%", borderTop: "2px solid #bbb"}}></div></>}
 
-      {data?.find(row=>row.id===modalTarget.id).socials? "": 
+      {data?.find(row=>row.id===modalTarget.id)?.socials? "": 
         <><h5>Socials:</h5>
           {
             data?.map((row, index) => {
@@ -588,7 +588,7 @@ const Index = ({ username, password }) => {
           }</>}
 
 
-        {data?.find(row=>row.id===modalTarget.id).notes?"":<><h5>Notes:</h5>
+        {data?.find(row=>row.id===modalTarget.id)?.notes?"":<><h5>Notes:</h5>
           {
             data?.map((row, index) => {
               if (row.id == modalTarget.id) {
