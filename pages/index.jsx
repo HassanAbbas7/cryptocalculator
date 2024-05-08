@@ -19,13 +19,13 @@ const Index = ({ username, password }) => {
   const [edit, setEdit] = useState(false);
   const [data, setData] = useState();
   const latestData = useRef(data);
-  const [targets, setTargets] = useState([{ "target1": "", "target2": "", "target3": "" }]);
   const [socialCache, setSocialCache] = useState();
   const [tokensReceived, setTokensReceived] = useState()
   const [tokensSpent, setTokensSpent] = useState()
   const [notesCache, setNotesCache] = useState();
   const [datesCache, setDatesCache] = useState();
   const [remainingSeconds, setRemainingSeconds] = useState(6);
+  const [timerDuration, setTimerDuration] = useState(6);
   const [datesDate, setDatesDate] = useState();
   const [show, setShow] = useState(false);
   const [show2, setShow2] = useState(false);
@@ -42,6 +42,10 @@ const Index = ({ username, password }) => {
   }
 
   useEffect(() => {
+
+    if (localStorage.getItem("timerDuration")) {
+      setTimerDuration(parseInt(localStorage.getItem("timerDuration")))
+    }
     
     const _ = async () => {
       const data_ = await getData(username, password);
@@ -145,20 +149,11 @@ const Index = ({ username, password }) => {
       }
       return row;
     });
-
+    console.log("setting rows")
+    console.log(updatedRows)
     setData(updatedRows);
-    updateTargets_(updatedRows);
   }
 
-
-  const updateTargets_ = (data) => {
-    if (data) {
-      const updatedRows = data.map((row) => {
-        return { ...row, ["target1"]: row.targets.split('/')[0], ["target2"]: row.targets.split('/')[1], ["target3"]: row.targets.split('/')[2] };
-      });
-      setData(updatedRows);
-    }
-  }
 
 
 
@@ -211,7 +206,7 @@ const Index = ({ username, password }) => {
   useEffect(() => {
     const _ = async () => {
       if (remainingSeconds===0){
-        setRemainingSeconds(6)
+        setRemainingSeconds(timerDuration)
         populateApiFieldsCMC(await populateApiFieldsDS(latestData.current));
       }
     }
@@ -344,7 +339,6 @@ const Index = ({ username, password }) => {
       h6: "",
       h24: "",
       free: "",
-      targets: "",
       target1: "",
       effectiveEntry: "",
       target2: "",
@@ -359,7 +353,7 @@ const Index = ({ username, password }) => {
 
   const getTimestamp = () => {
     var currentDate = new Date();
-    var formattedDate = currentDate.toLocaleString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true });
+    var formattedDate = currentDate.toLocaleString('en-US', { month: '2-digit', day: '2-digit'});
     console.log(formattedDate); // Outputs something like: "03/28/24, 2:16 PM"
 
     formattedDate = formattedDate.replace(',', '')
@@ -391,17 +385,19 @@ const Index = ({ username, password }) => {
           data?.map((row, index)=>{
             if (row.id == modalTarget.id) {
               return row[modalTarget.column].split('\n').map((date, index)=>{
-
-                let otherDate = new Date(date.split("---->")[0])
-                const currentDate = new Date();
-                const differenceMs = otherDate - currentDate;
-                const differenceDays = Math.floor(differenceMs / (1000 * 60 * 60 * 24)) + 1;
-
-                const strikeThrough = differenceDays <  0? true: false
-                const boldAndGreen = differenceDays == 0? true: false
-                const orange = (differenceDays > 0 && differenceDays < 5)? true: false
-
-                return <p style={{fontWeight: boldAndGreen? "bold":"", backgroundColor: orange? "orange": boldAndGreen? "green": "", textDecoration: strikeThrough? "line-through": ""}} key={index}>{date}</p>
+                if (date){
+                  let otherDate = new Date(date.split("---->")[0])
+                  let customDate = "["+otherDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })+"]: " + date.split("---->")[1];
+                  const currentDate = new Date();
+                  const differenceMs = otherDate - currentDate;
+                  const differenceDays = Math.floor(differenceMs / (1000 * 60 * 60 * 24)) + 1;
+  
+                  const strikeThrough = differenceDays <  0? true: false
+                  const boldAndGreen = differenceDays == 0? true: false
+                  const orange = (differenceDays > 0 && differenceDays < 5)? true: false
+  
+                  return <p style={{fontWeight: boldAndGreen? "bold":"", backgroundColor: orange? "orange": boldAndGreen? "green": "", textDecoration: strikeThrough? "line-through": ""}} key={index}>{customDate}</p>
+                }
               
               })
             }
@@ -443,7 +439,29 @@ const Index = ({ username, password }) => {
       </Modal>
     </>
       <>
-        <Modal show={show2} onHide={()=>{setShow2(false)}}>
+        <Modal show={show2} onHide={()=>{setShow2(false);
+        const updatedRows = data.map((row) => {
+          if (row.id === modalTarget.id) {
+              let updatedRow = { ...row };
+  
+              if (socialCache) {
+                  setSocialCache(null);
+                  updatedRow["socials"] = row["socials"] + "\n" + "[" + getTimestamp() + "]" + ": " + "\n" + socialCache + "\n";
+              }
+  
+              if (notesCache) {
+                  setNotesCache(null);
+                  updatedRow["notes"] = row["notes"] + "\n" + "[" + getTimestamp() + "]" + ": " + "\n" + notesCache + "\n";
+              }
+  
+              return updatedRow;
+          }
+  
+          return row;
+      });
+        setData(updatedRows);
+
+        }}>
 
           <Modal.Header closeButton>
             <Modal.Title>Edit {modalTarget.column}</Modal.Title>
@@ -453,7 +471,7 @@ const Index = ({ username, password }) => {
           <form>
             {/* <div style={{ display: 'flex' }} className="form-row"> */}
               <div className="form-group">
-                <label htmlFor="inputName">Name</label>
+                <label htmlFor="inputName">Project Name</label>
                 <input style={{width: "100%"}} value={data?.find(row=>row.id === modalTarget.id)?.name} onChange={(e)=>{handleUpdate(modalTarget.id, "name", e.target.value)}} type="text" className="form-control" id="inputName" placeholder="Name" />
               </div>
               
@@ -469,7 +487,7 @@ const Index = ({ username, password }) => {
               </select>
             </div>
             <div className="form-group" style={{ width: '100%' }}>
-              <label htmlFor="inputChain">Chain</label>
+              <label htmlFor="inputChain">Block Chain</label>
               <input value={data?.find(row=>row.id === modalTarget.id)?.chain} onChange={(e)=>{handleUpdate(modalTarget.id, "chain", e.target.value)}} type="text" className="form-control" id="inputChain" placeholder="Chain" />
             </div>
             </div>
@@ -504,27 +522,33 @@ const Index = ({ username, password }) => {
 
                 <h2 className="my-3 text-center">DS</h2>
                 <div className="my-2" style={{width: "100%", borderTop: "2px solid #bbb"}}></div>
-            <div className="form-group" style={{ width: '100%' }}>
-              <label htmlFor="inputChain">DS URL</label>
-              <input type="text" value={data?.find(row=>row.id === modalTarget.id)?.dsUrl} onChange={(e)=>{handleUpdate(modalTarget.id, "dsUrl", e.target.value)}} className="form-control" />
+
+
+                <div className="form-group" style={{ width: '100%' }}>
+              <label htmlFor="inputChain">Token Contract</label>
+              <input value={data?.find(row=>row.id === modalTarget.id)?.contact} spellCheck="false" onChange={(e)=>{handleUpdate(modalTarget.id, "contact", e.target.value)}} type="text" className="form-control" id="inputChain" placeholder="Token Contract" />
             </div>
 
+
             <div className="form-group" style={{ width: '100%' }}>
-              <label htmlFor="inputChain">Pair (not token) Contract</label>
+              <label htmlFor="inputChain">PAIR (not token) Contract</label>
               <input value={data?.find(row=>row.id === modalTarget.id)?.pairContract} onChange={(e)=>{handleUpdate(modalTarget.id, "pairContract", e.target.value)}} type="text" className="form-control" id="inputChain" placeholder="Pair Contract" />
             </div>
 
 
-          <div className="form-row" style={{ display: 'flex' }}>
+          <div className="form-row my-4" style={{ display: 'flex' }}>
+            
+            <div className="form-group col-md-6">
+              <label htmlFor="inputEPrice" style={{display: "flex"}}>E.Price <p style={{fontSize: "11px", margin:"0"}}>(use calculator if unknown)</p></label>
+              <input type="number" value={data?.find(row=>row.id === modalTarget.id)?.price} onChange={(e)=>{handleUpdate(modalTarget.id, "price", e.target.value)}} className="form-control" id="inputEPrice" placeholder="E.Price" />
+            </div>
+
             <div className="form-group col-md-6 ">
               <label htmlFor="inputEMcap">E.Mcap</label>
               <input  value={(data?.find(row=>row.id === modalTarget.id)?.mcap)} onChange={(e)=>{handleUpdate(modalTarget.id, "mcap", e.target.value, true)}}  type="text" className="form-control" id="inputEMcap" placeholder="E.Mcap" />
             </div>
 
-            <div className="form-group col-md-6">
-              <label htmlFor="inputEPrice" style={{display: "flex"}}>E.Price <p style={{fontSize: "3px", margin:"0"}}>(use calculator if unknown)</p></label>
-              <input type="number" value={data?.find(row=>row.id === modalTarget.id)?.price} onChange={(e)=>{handleUpdate(modalTarget.id, "price", e.target.value)}} className="form-control" id="inputEPrice" placeholder="E.Price" />
-            </div>
+            
           </div>
 
 
@@ -548,13 +572,43 @@ const Index = ({ username, password }) => {
           <h5>Socials</h5>
           {"[" + getTimestamp() + "]: "}
           <textarea autoFocus rows={10} style={{width: "100%"}} value={socialCache} onChange={(e)=>{setSocialCache(e.target.value)}} type="text" onBlur={()=>{handleModalBlur(socialCache); }} /> */}
+      
+     {!(data?.find(row=>row.id===modalTarget.id).socials && data?.find(row=>row.id===modalTarget.id).notes) && <><h3 className='text-center'>Website, Socials, Notes:</h3>
+      <div className="my-2" style={{width: "100%", borderTop: "2px solid #bbb"}}></div></>}
 
+      {data?.find(row=>row.id===modalTarget.id).socials? "": 
+        <><h5>Socials:</h5>
+          {
+            data?.map((row, index) => {
+              if (row.id == modalTarget.id) {
+                return <>{"[" + getTimestamp() + "]: "}
+                <textarea autoFocus rows={5} style={{width: "100%"}} value={socialCache} onChange={(e)=>{setSocialCache(e.target.value)}} type="text"/></>
+              }
+            })
+          }</>}
+
+
+        {data?.find(row=>row.id===modalTarget.id).notes?"":<><h5>Notes:</h5>
+          {
+            data?.map((row, index) => {
+              if (row.id == modalTarget.id) {
+                if (row.notes) return ""
+                return <>{"[" + getTimestamp() + "]: "}
+                <textarea autoFocus rows={5} style={{width: "100%"}} value={notesCache} onChange={(e)=>{setNotesCache(e.target.value)}} type="text"/></>
+              }
+            })
+          }</>}
+          
+
+            <div className="form-row" style={{ display: 'flex' }}></div>
 
                 <h3 className='text-center'>Targets</h3>
             <div className="form-row" style={{ display: 'flex' }}>
+
+
             <div className="form-group col-md-6 ">
               <label htmlFor="inputEMcap">Target 1</label>
-              <input  value={(data?.find(row=>row.id === modalTarget.id)?.target1)} onChange={(e)=>{handleUpdate(modalTarget.id, "target1", e.target.value, true)}}  type="text" className="form-control" id="inputEMcap" placeholder="E.Mcap" />
+              <input  value={(data?.find(row=>row.id === modalTarget.id)?.target1)} onChange={(e)=>{handleUpdate(modalTarget.id, "target1", e.target.value, true)}}  type="number" className="form-control" id="inputEMcap" placeholder="E.Mcap" />
             </div>
 
             <div className="form-group col-md-6">
@@ -565,7 +619,7 @@ const Index = ({ username, password }) => {
           <div className="form-row" style={{ display: 'flex' }}>
             <div className="form-group col-md-6 ">
               <label htmlFor="inputEMcap">Target 3</label>
-              <input  value={(data?.find(row=>row.id === modalTarget.id)?.target3)} onChange={(e)=>{handleUpdate(modalTarget.id, "target3", e.target.value, true)}}  type="text" className="form-control" id="inputEMcap" placeholder="E.Mcap" />
+              <input  value={(data?.find(row=>row.id === modalTarget.id)?.target3)} onChange={(e)=>{handleUpdate(modalTarget.id, "target3", e.target.value, true)}}  type="number" className="form-control" id="inputEMcap" placeholder="E.Mcap" />
             </div>
 
             <div className="form-group col-md-6">
@@ -579,26 +633,28 @@ const Index = ({ username, password }) => {
             {data?.map((row, index)=>{
             if (row.id == modalTarget.id) {
               return row[modalTarget.column].split('\n').map((date, index)=>{
-
-                let otherDate = new Date(date.split("---->")[0])
-                const currentDate = new Date();
-                const differenceMs = otherDate - currentDate;
-                const differenceDays = Math.floor(differenceMs / (1000 * 60 * 60 * 24)) + 1;
-
-                const strikeThrough = differenceDays <  0? true: false
-                const boldAndGreen = differenceDays == 0? true: false
-                const orange = (differenceDays > 0 && differenceDays < 5)? true: false
-
-                return <p style={{fontWeight: boldAndGreen? "bold":"", backgroundColor: orange? "orange": boldAndGreen? "green": "", textDecoration: strikeThrough? "line-through": ""}} key={index}>{date}</p>
-              
+                if (date){
+                  let otherDate = new Date(date.split("---->")[0])
+                  let customDate = "["+otherDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })+"]: " + date.split("---->")[1];
+                  const currentDate = new Date();
+                  const differenceMs = otherDate - currentDate;
+                  const differenceDays = Math.floor(differenceMs / (1000 * 60 * 60 * 24)) + 1;
+  
+                  const strikeThrough = differenceDays <  0? true: false
+                  const boldAndGreen = differenceDays == 0? true: false
+                  const orange = (differenceDays > 0 && differenceDays < 5)? true: false
+  
+                  return <p style={{fontWeight: boldAndGreen? "bold":"", backgroundColor: orange? "orange": boldAndGreen? "green": "", textDecoration: strikeThrough? "line-through": ""}} key={index}>{customDate}</p>
+                
+                }
               })
             }
           })}
            <>
            
            {
-            edit && <><input type='date' className="form-control" value={datesDate} onChange={(e)=>{setDatesDate(e.target.value)}}></input>
-          <textarea className='my-2' autoFocus rows={10} style={{width: "100%"}} value={datesCache} onChange={(e)=>{setDatesCache(e.target.value)}} type="text" onBlur={(e)=>{handleModalBlurDates(e);}} /></>
+            edit && <><input type='date' className="form-control" value={datesDate} onChange={(e)=>{setDatesDate(e.target.value); }}></input>
+          <textarea className='my-2' autoFocus rows={5} style={{width: "100%"}} value={datesCache} onChange={(e)=>{setDatesCache(e.target.value)}} type="text" onBlur={(e)=>{handleModalBlurDates(e);}} /></>
            }
            <div style={{ cursor: 'pointer', padding: '0.5rem' }} onClick={()=>setEdit(true)} className="text-center"><FontAwesomeIcon icon={faPlus} style={{ fontSize: '1rem'}}  /></div>
           </>
@@ -606,19 +662,50 @@ const Index = ({ username, password }) => {
 
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={()=>setShow2(false)}>
+            <Button variant="secondary" onClick={()=>{setShow2(false); 
+            
+              const updatedRows = data.map((row) => {
+                if (row.id === modalTarget.id) {
+                    let updatedRow = { ...row };
+        
+                    if (socialCache) {
+                        setSocialCache(null);
+                        updatedRow["socials"] = row["socials"] + "\n" + "[" + getTimestamp() + "]" + ": " + "\n" + socialCache + "\n";
+                    }
+        
+                    if (notesCache) {
+                        setNotesCache(null);
+                        updatedRow["notes"] = row["notes"] + "\n" + "[" + getTimestamp() + "]" + ": " + "\n" + notesCache + "\n";
+                    }
+        
+                    return updatedRow;
+                }
+        
+                return row;
+            });
+              setData(updatedRows);
+            }}>
               Close
             </Button>
           </Modal.Footer>
         </Modal>
       </>
-      <div>Refreshing in:{remainingSeconds}</div> <button onClick={()=>{setRemainingSeconds(0)}}>Force Refresh</button>
-      <h2 onClick={()=>console.log(data)}>Calculator </h2>
+      <div style={{display: 'flex'}}>
+      
+      <div style={{textAlign: "left"}}>Refreshing in: {remainingSeconds} seconds <input style={{height: "75%", width: "10%"}} type="text" value={ timerDuration} onChange={(e)=>{setTimerDuration(e.target.value); localStorage.setItem("timerDuration", e.target.value)}} /> <button style={{padding: "0"}} onClick={()=>{setRemainingSeconds(0)}}>Force Refresh</button></div>
+      </div>
+      <div onClick={() => { let newRow=handleAdd(); setModalTarget({id: newRow, column: "dates"}); setShow2(true)}} style={{width: "20px", float: "left", cursor: "pointer"}}>
+      <FontAwesomeIcon icon={faPlus} style={{ fontSize: '1rem' }} />
+      </div>
+      <div style={{textAlign: "left", marginLeft: "18px"}}>
+        Filter by [x]all users []user1 []user2 []user3
+      </div>
+      
       <table className="table table-striped custom-table">
         <thead>
           <tr>
             <th>#</th>
-            <th>Column 1</th>
+            <th>Project Vitals</th>
             <th>Column 2</th>
             <th>Actions</th>
           </tr>
@@ -636,7 +723,7 @@ const Index = ({ username, password }) => {
                 <td >{index + 1}</td>
 
                 
-                <td>{row?.name} | {row?.chain} | {row?.chainId} <br /> 
+                <td style={{textAlign: "left"}}>{row?.name} | {row?.chain} | {row?.chainId} <br /> 
                 
                 <p>${parseFloat(row?.apiPrice).toFixed(5)} <span style={{color: 'green'}}> ({(((row?.apiPrice - ((row?.tokensReceived/row?.tokensSpent)? (row?.tokensReceived/row?.tokensSpent) : row?.price)) / ((row?.tokensReceived/row?.tokensSpent)? (row?.tokensReceived/row?.tokensSpent) :  row?.price))*100).toFixed(5)}%) </span>
                 /{row?.tokensReceived/row?.tokensSpent}
@@ -647,7 +734,7 @@ const Index = ({ username, password }) => {
 
                   <br /> m5: {row["m5"]? row["m5"] : "None"} h1: {row["h1"]? row["h1"] : "None"} h6: {row["h6"]? row["h6"] : "None"} h6: {row["h6"]? row["h6"] : "None"} h24: {row["h24"]? row["h24"] : "None"} <br /> Source: {row?.api}</td>
 
-                <td>State Token: {(row?.contact)?.slice(0, 10)}....{(row?.contact)?.slice(-10)} <FontAwesomeIcon icon={faCopy} onClick={() => {navigator.clipboard.writeText(row?.contact)}} style={{cursor: 'pointer' }}/> <br /> Pair Address: {(row?.pairContract)?.slice(0, 10)}....{(row?.pairContract)?.slice(-10)}<FontAwesomeIcon icon={faCopy} onClick={() => {navigator.clipboard.writeText(row?.pairContract)}} style={{cursor: 'pointer' }}/> <br /> Social: {row?.social} <br /> Notes: {row?.notes} </td>
+                <td>State Token: {(row?.contact)} <FontAwesomeIcon icon={faCopy} onClick={() => {navigator.clipboard.writeText(row?.contact)}} style={{cursor: 'pointer' }}/> <br /> Pair Address: {(row?.pairContract)?.slice(0, 10)}....{(row?.pairContract)?.slice(-10)}<FontAwesomeIcon icon={faCopy} onClick={() => {navigator.clipboard.writeText(row?.pairContract)}} style={{cursor: 'pointer' }}/> <br /> Social: {row?.social} <br /> Notes: {row?.notes} </td>
 
 
                 <td><FontAwesomeIcon icon={faEdit} onClick={() => {setModalTarget({id: row.id, column: "dates"}); setShow2(true)} } style={{ fontSize: '1rem', cursor: 'pointer' }}/>
